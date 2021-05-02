@@ -10,6 +10,13 @@ provider:
   memorySize: 128
   timeout: 10
   lambdaHashingVersion: 20201221
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ssm:GetParameter
+          Resource: '*'
 
 custom:
   config: ${file(./prod.json)}
