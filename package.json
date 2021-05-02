@@ -16,7 +16,7 @@
   },
   "scripts": {
     "start": "sls invoke local -f cowinMailer",
-    "deploy:function": "sls deploy function --function cowinMailer",
+    "deploy:function": "sls deploy function -f cowinMailer",
     "deploy": "sls deploy"
   }
 }
