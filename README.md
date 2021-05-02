@@ -1,7 +1,9 @@
 # cowin-alert
 Send email alerts when vaccine is available on https://cowin.gov.in
 
-Functionality currently is for only a single subscriber that can be configured in [subscriber.js](https://github.com/qruiger/cowin-alert/blob/master/src/subscriber.js).   
+![image](https://user-images.githubusercontent.com/17964902/116826053-bdfc7f00-abaf-11eb-8f5f-da182c9daa8c.png)
+
+Functionality currently is for only a single subscriber that can be configured in [subscriber.js](https://github.com/qruiger/cowin-alert/blob/master/src/subscriber.js)   
 If `districtId` is not set, Mumbai will be used as default
 
 Before running `npm run deploy`, create two parameters in parameter store in your aws account
