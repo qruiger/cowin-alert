@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 const nodemailer = require('nodemailer');
 const moment = require('moment');
 const crypto = require('crypto');
-const { SSMClient, GetParameterCommand, PutParameterCommand } = require("@aws-sdk/client-ssm");
+const { SSMClient, GetParameterCommand, PutParameterCommand } = require('@aws-sdk/client-ssm');
 const subscriber = require('./subscriber');
 
 const mailTransporter = nodemailer.createTransport({
@@ -80,7 +80,7 @@ module.exports.mailer = async (event, context) => {
   try {
     const filters = { ...subscriber.filters };
     const params = new URLSearchParams({
-      district_id: 395, // Mumbai
+      district_id: filters.districtId || 395,
       date: moment().format('DD-MM-YYYY')
     });
     const url = 'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict';
