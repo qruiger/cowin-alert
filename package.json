@@ -9,12 +9,13 @@
     "serverless": "^2.39.0"
   },
   "dependencies": {
+    "@aws-sdk/client-ssm": "^3.14.0",
     "moment": "^2.29.1",
     "node-fetch": "^2.6.1",
     "nodemailer": "^6.6.0"
   },
   "scripts": {
-    "start": "sls invoke local --function cowinMailer",
+    "start": "sls invoke local -f cowinMailer",
     "deploy:function": "sls deploy function --function cowinMailer",
     "deploy": "sls deploy"
   }
