@@ -2,17 +2,21 @@
   "name": "cowin-alert",
   "version": "1.0.0",
   "description": "Service to send out alerts to subscribed users when vaccine is available",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
+  "main": "handler.js",
   "author": "",
   "license": "ISC",
+  "devDependencies": {
+    "serverless": "^2.39.0",
+    "serverless-ssm-fetch": "^1.0.2"
+  },
   "dependencies": {
-    "lodash": "^4.17.21",
     "moment": "^2.29.1",
     "node-fetch": "^2.6.1",
     "nodemailer": "^6.6.0"
+  },
+  "scripts": {
+    "start": "sls invoke local --function cowinMailer",
+    "deploy:function": "sls deploy function --function cowinMailer",
+    "deploy": "sls deploy"
   }
 }
