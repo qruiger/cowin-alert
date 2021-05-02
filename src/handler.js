@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 const nodemailer = require('nodemailer');
 const moment = require('moment');
 const crypto = require('crypto');
-const { SSMClient, PutParameterCommand } = require("@aws-sdk/client-ssm");
+const { SSMClient, GetParameterCommand, PutParameterCommand } = require("@aws-sdk/client-ssm");
 const subscriber = require('./subscriber');
 
 const mailTransporter = nodemailer.createTransport({
@@ -21,8 +21,28 @@ const mailDetails = {
 
 const getHash = (message) => crypto.createHash('md5').update(message).digest('hex');
 
+const ssmClient = new SSMClient({ region: 'ap-south-1' });
+
+const getPreviousEmailText = async () => {
+  const params = {
+    Name: process.env.EMAIL_TEXT_KEY
+  };
+  const getParameter = new GetParameterCommand(params);
+  try {
+    const data = await ssmClient.send(getParameter);
+    if (data.Parameter?.Value) {
+      return data.Parameter.Value;
+    }
+    return null;
+  } catch (error) {
+    if (error.name === 'ParameterNotFound') {
+      return null;
+    }
+    throw error;
+  }
+}
+
 const saveCurrentEmailText = async (hashedEmailText) => {
-  const ssmClient = new SSMClient({ region: 'ap-south-1' });
   const params = {
     Value: hashedEmailText,
     DataType: 'text',
@@ -83,7 +103,7 @@ module.exports.mailer = async (event, context) => {
     if (result.length) {
       const currentEmailText = constructMailText(result);
       const currentEmailTextHash = getHash(currentEmailText);
-      const previousEmailTextHash = process.env.EMAIL_TEXT;
+      const previousEmailTextHash = await getPreviousEmailText();
 
       if (currentEmailTextHash !== previousEmailTextHash) {
         await saveCurrentEmailText(currentEmailTextHash);

@@ -19,7 +19,6 @@ functions:
     handler: src/handler.mailer
     environment:
       EMAIL_TEXT_KEY: ${self:custom.config.EMAIL_TEXT_KEY}
-      EMAIL_TEXT: ${ssm:/${self:custom.config.EMAIL_TEXT_KEY}}
       SMTP_SERVICE: ${self:custom.config.SMTP_SERVICE}
       GMAIL_USER: ${self:custom.config.GMAIL_USER}
       GMAIL_PASS: ${ssm:/${self:custom.config.GMAIL_PASS_KEY}}
