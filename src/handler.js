@@ -2,13 +2,11 @@ const fetch = require('node-fetch');
 const nodemailer = require('nodemailer');
 const moment = require('moment');
 const crypto = require('crypto');
-const { SSMClient, GetParameterCommand, PutParameterCommand } = require("@aws-sdk/client-ssm");
-
-const ssmClient = new SSMClient({ region: 'ap-south-1' });
-const ssmKey = process.env.PREVIOUS_EMAIL_TEXT;
+const { SSMClient, PutParameterCommand } = require("@aws-sdk/client-ssm");
+const subscriber = require('./subscriber');
 
 const mailTransporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: process.env.SMTP_SERVICE,
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS
@@ -17,36 +15,18 @@ const mailTransporter = nodemailer.createTransport({
 
 const mailDetails = {
   from: process.env.GMAIL_USER,
-  to: 'viditvora116@gmail.com',
+  to: subscriber.email,
   subject: 'Vaccine Availability'
 };
 
 const getHash = (message) => crypto.createHash('md5').update(message).digest('hex');
 
-const getPreviousEmailText = async () => {
-  const params = {
-    Name: ssmKey
-  };
-  const getParameter = new GetParameterCommand(params);
-  try {
-    const data = await ssmClient.send(getParameter);
-    if (data.Parameter?.Value) {
-      return data.Parameter.Value;
-    }
-    return null;
-  } catch (error) {
-    if (error.name === 'ParameterNotFound') {
-      return null;
-    }
-    throw error;
-  }
-}
-
 const saveCurrentEmailText = async (hashedEmailText) => {
+  const ssmClient = new SSMClient({ region: 'ap-south-1' });
   const params = {
     Value: hashedEmailText,
     DataType: 'text',
-    Name: ssmKey,
+    Name: process.env.EMAIL_TEXT_KEY,
     Type: 'String',
     Overwrite: true
   };
@@ -78,9 +58,7 @@ const constructMailText = (data) => {
 
 module.exports.mailer = async (event, context) => {
   try {
-    const filters = {
-      preferredPincodes: [400053, 400058, 400059, 400064, 400093, 400102, 400104]
-    };
+    const filters = { ...subscriber.filters };
     const params = new URLSearchParams({
       district_id: 395, // Mumbai
       date: moment().format('DD-MM-YYYY')
@@ -104,8 +82,8 @@ module.exports.mailer = async (event, context) => {
 
     if (result.length) {
       const currentEmailText = constructMailText(result);
-      const previousEmailTextHash = await getPreviousEmailText();
       const currentEmailTextHash = getHash(currentEmailText);
+      const previousEmailTextHash = process.env.EMAIL_TEXT;
 
       if (currentEmailTextHash !== previousEmailTextHash) {
         await saveCurrentEmailText(currentEmailTextHash);

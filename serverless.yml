@@ -5,19 +5,24 @@ configValidationMode: error
 provider:
   name: aws
   runtime: nodejs14.x
-  stage: production
+  stage: prod
   region: ap-south-1
   memorySize: 128
   timeout: 10
   lambdaHashingVersion: 20201221
 
+custom:
+  config: ${file(./prod.json)}
+
 functions:
   cowinMailer:
-    handler: handler.mailer
+    handler: src/handler.mailer
     environment:
-      PREVIOUS_EMAIL_TEXT: 'emailText'
-      GMAIL_USER: 'cowinmailer@gmail.com'
-      GMAIL_PASS: ${ssm:/gmailPass}
+      EMAIL_TEXT_KEY: ${self:custom.config.EMAIL_TEXT_KEY}
+      EMAIL_TEXT: ${ssm:/${self:custom.config.EMAIL_TEXT_KEY}}
+      SMTP_SERVICE: ${self:custom.config.SMTP_SERVICE}
+      GMAIL_USER: ${self:custom.config.GMAIL_USER}
+      GMAIL_PASS: ${ssm:/${self:custom.config.GMAIL_PASS_KEY}}
     events:
       - schedule:
           rate: rate(30 minutes)
