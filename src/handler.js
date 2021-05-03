@@ -19,7 +19,7 @@ const mailDetails = {
   subject: 'Vaccine Availability'
 };
 
-const getHash = (message) => crypto.createHash('md5').update(message).digest('hex');
+const getHash = message => crypto.createHash('md5').update(message).digest('hex');
 
 const ssmClient = new SSMClient({ region: 'ap-south-1' });
 
@@ -63,7 +63,7 @@ const constructMailText = (data) => {
   let text = '';
   data.forEach(center => {
     text += `Center Name: ${center.name}  Pincode: ${center.pincode}  Free: ${center.fee_type === 'Paid' ? 'No' : 'Yes'} \n`;
-    center.sessions.forEach((session) => {
+    center.sessions.forEach(session => {
       text += `Date: ${session.date}\n`;
       text += `Available Capacity: ${session.available_capacity}  Age Limit: ${session.min_age_limit === 18 ? '18-44' : '44+'}  `;
       if (session.vaccine) {
@@ -79,13 +79,25 @@ const constructMailText = (data) => {
 module.exports.mailer = async (event, context) => {
   try {
     const filters = { ...subscriber.filters };
-    const params = new URLSearchParams({
-      district_id: filters.districtId || 395,
-      date: moment().format('DD-MM-YYYY')
-    });
-    const url = 'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict';
-    const res = await fetch(`${url}?${params}`);
-    const data = await res.json();
+
+    const promises = [];
+    // accumulate 4 week data
+    for (let week = 0; week < 4; week++) {
+      const date = week === 0 ?
+                  moment().format('DD-MM-YYYY') :
+                  moment().add(7 * week, 'd').format('DD-MM-YYYY');
+      const params = new URLSearchParams({
+        district_id: filters.districtId || 395,
+        date: date
+      });
+      const url = 'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict';
+      promises.push(fetch(`${url}?${params}`));
+    }
+
+    const data = { centers: [] };
+    const responses = await Promise.all(promises);
+    const weeksData = await Promise.all(responses.map(response => response.json()));
+    data.centers = weeksData.flatMap(weekData => weekData.centers);
 
     let result = data.centers.map(center => {
       if (filters.preferredPincodes.indexOf(center.pincode) > -1 || !filters.preferredPincodes.length) {
