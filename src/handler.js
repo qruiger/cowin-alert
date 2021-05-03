@@ -83,12 +83,9 @@ module.exports.mailer = async (event, context) => {
     const promises = [];
     // accumulate 4 week data
     for (let week = 0; week < 4; week++) {
-      const date = week === 0 ?
-                  moment().format('DD-MM-YYYY') :
-                  moment().add(7 * week, 'd').format('DD-MM-YYYY');
       const params = new URLSearchParams({
         district_id: filters.districtId || 395,
-        date: date
+        date: moment().add(7 * week, 'd').format('DD-MM-YYYY')
       });
       const url = 'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict';
       promises.push(fetch(`${url}?${params}`));
