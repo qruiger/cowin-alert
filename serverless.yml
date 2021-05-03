@@ -31,4 +31,4 @@ functions:
       GMAIL_PASS: ${ssm:/${self:custom.config.GMAIL_PASS_KEY}}
     events:
       - schedule:
-          rate: rate(30 minutes)
+          rate: cron(0/30 * * * ? *)
