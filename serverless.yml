@@ -7,8 +7,8 @@ provider:
   runtime: nodejs14.x
   stage: prod
   region: ap-south-1
-  memorySize: 128
-  timeout: 10
+  memorySize: 256
+  timeout: 30
   lambdaHashingVersion: 20201221
   iam:
     role:

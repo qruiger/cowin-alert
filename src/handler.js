@@ -124,8 +124,8 @@ const filterCenters = (centers) => {
 const getAvailability = async () => {
   const { districtId } = subscriber;
   const promises = [];
-  // accumulate 4 week data
-  for (let week = 0; week < 4; week++) {
+  const totalWeeks = 4;
+  for (let week = 0; week < totalWeeks; week++) {
     const headers = {
       'user-agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\
