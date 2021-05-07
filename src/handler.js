@@ -28,6 +28,8 @@ const getHash = (message) =>
 
 const ssmClient = new SSMClient({ region: 'ap-south-1' });
 
+const isNullOrDefined = (value) => value === null || value === undefined;
+
 const getPreviousEmailText = async () => {
   const params = {
     Name: process.env.EMAIL_TEXT_KEY,
@@ -89,25 +91,21 @@ const filterCenters = (centers) => {
   const { preferredPincodes, vaccineType, free, above45 } = subscriber;
   let result = centers.map((center) => {
     if (
-      (preferredPincodes && preferredPincodes.indexOf(center.pincode) > -1) ||
-      ((preferredPincodes === undefined ||
-        preferredPincodes === null ||
+      ((preferredPincodes && preferredPincodes.indexOf(center.pincode) > -1) ||
+        isNullOrDefined(preferredPincodes) ||
         !preferredPincodes.length) &&
-        ((free === true && center.fee_type === 'Free') ||
-          (free === false && center.fee_type === 'Paid') ||
-          free === undefined ||
-          free === null))
+      ((free === true && center.fee_type === 'Free') ||
+        (free === false && center.fee_type === 'Paid') ||
+        isNullOrDefined(free))
     ) {
       const sessions = center.sessions.filter(
         (session) =>
           session.available_capacity > 0 &&
           ((session.vaccine && session.vaccine === vaccineType) ||
-            vaccineType === undefined ||
-            vaccineType === null) &&
+            isNullOrDefined(vaccineType)) &&
           ((above45 === true && session.min_age_limit === 45) ||
             (above45 === false && session.min_age_limit === 18) ||
-            above45 === undefined ||
-            above45 === null)
+            isNullOrDefined(above45))
       );
       if (sessions.length) {
         return {
