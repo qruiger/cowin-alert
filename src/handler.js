@@ -137,6 +137,7 @@ const getAvailability = async () => {
     const queryParams = new URLSearchParams({
       district_id: districtId || 395,
       date: moment()
+        .utcOffset('+05:30')
         .add(7 * week, 'd')
         .format('DD-MM-YYYY'),
     });
