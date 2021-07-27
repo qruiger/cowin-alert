@@ -68,27 +68,28 @@ const saveCurrentEmailText = async (hashedEmailText) => {
 
 const constructMailText = (data) => {
   let text = '';
-  data.forEach((center) => {
+  data.forEach((center, index) => {
     text += `Center Name: ${center.name}  Pincode: ${center.pincode}  Free: ${
       center.fee_type === 'Paid' ? 'No' : 'Yes'
     } \n`;
+    text += `Address: ${center.address}\n\n`;
     center.sessions.forEach((session) => {
-      text += `Date: ${session.date}\n`;
+      text += `Date: ${session.date} ${
+        session.vaccine ? `Vaccine: ${session.vaccine}` : ''
+      }\n`;
       text += `Available Capacity: ${session.available_capacity}  Age Limit: ${
-        session.min_age_limit === 18 ? '18-44' : '44+'
-      }  `;
-      if (session.vaccine) {
-        text += `Vaccine: ${session.vaccine}`;
-      }
-      text += '\n';
+        session.min_age_limit === 18 ? '18-44' : '45+'
+      }\n\n`;
     });
-    text += '\n\n';
+    if (index !== data.length - 1) {
+      text += '\n\n';
+    }
   });
   return text;
 };
 
 const filterCenters = (centers) => {
-  const { preferredPincodes, vaccineType, free, above45 } = subscriber;
+  const { preferredPincodes, vaccineType, free, above45, dose } = subscriber;
   let result = centers.map((center) => {
     if (
       ((preferredPincodes && preferredPincodes.indexOf(center.pincode) > -1) ||
@@ -100,9 +101,13 @@ const filterCenters = (centers) => {
     ) {
       const sessions = center.sessions.filter(
         (session) =>
-          session.available_capacity > 0 &&
-          ((session.vaccine && session.vaccine === vaccineType) ||
-            isNullOrDefined(vaccineType)) &&
+          ((dose === 1 && session.available_capacity_dose1 > 0) ||
+            (dose === 2 && session.available_capacity_dose2 > 0)) &&
+          ((session.vaccine &&
+            vaccineType &&
+            vaccineType.indexOf(session.vaccine) > -1) ||
+            isNullOrDefined(vaccineType) ||
+            !vaccineType.length) &&
           ((above45 === true && session.min_age_limit === 45) ||
             (above45 === false && session.min_age_limit === 18) ||
             isNullOrDefined(above45))
@@ -115,8 +120,22 @@ const filterCenters = (centers) => {
       }
     }
   });
-  result = result.filter((r) => !!r);
-  return result;
+  return result.reduce((accumulator, currentValue) => {
+    if (currentValue) {
+      const alreadyProcessedCenterIndex = accumulator.findIndex(
+        (a) => a.center_id == currentValue.center_id
+      );
+      if (alreadyProcessedCenterIndex > -1) {
+        accumulator[alreadyProcessedCenterIndex].sessions = [
+          ...accumulator[alreadyProcessedCenterIndex].sessions,
+          ...currentValue.sessions,
+        ];
+      } else {
+        accumulator.push(currentValue);
+      }
+    }
+    return accumulator;
+  }, []);
 };
 
 const getAvailability = async () => {
@@ -166,12 +185,12 @@ module.exports.mailer = async (event, context) => {
       const previousEmailTextHash = await getPreviousEmailText();
 
       if (currentEmailTextHash !== previousEmailTextHash) {
-        await saveCurrentEmailText(currentEmailTextHash);
         const info = await mailTransporter.sendMail({
           ...mailDetails,
           text: currentEmailText,
         });
         console.log('Message sent: %s', info.messageId);
+        await saveCurrentEmailText(currentEmailTextHash);
       } else {
         console.log('No new availability added since last sent email');
       }
