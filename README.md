@@ -11,8 +11,3 @@ Before running `npm run deploy`, create two parameters in parameter store in you
  - `emailText` - cheap workaround to have cache for the Lambda to avoid sending repetitive emails   
 
 Ensure that you've run `aws configure` once before deploying from your local machine
-
-TODO:
-- Multi-user, multi-filters
-- use SES
-- connect to google sheet for saving user filters and fan-out notifications
