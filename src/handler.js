@@ -77,9 +77,17 @@ const constructMailText = (data) => {
       text += `Date: ${session.date} ${
         session.vaccine ? `Vaccine: ${session.vaccine}` : ''
       }\n`;
-      text += `Available Capacity: ${session.available_capacity}  Age Limit: ${
-        session.min_age_limit === 18 ? '18-44' : '45+'
-      }\n\n`;
+
+      let age_limit;
+      if (session.allow_all_age) {
+        age_limit = '18+';
+      } else if (session.min_age_limit === 45) {
+        age_limit = '45+';
+      } else {
+        age_limit = '18-44 only';
+      }
+
+      text += `Available Capacity: ${session.available_capacity}  Age Limit: ${age_limit}\n\n`;
     });
     if (index !== data.length - 1) {
       text += '\n\n';
@@ -108,8 +116,11 @@ const filterCenters = (centers) => {
             vaccineType.indexOf(session.vaccine) > -1) ||
             isNullOrDefined(vaccineType) ||
             !vaccineType.length) &&
-          ((above45 === true && session.min_age_limit === 45) ||
-            (above45 === false && session.min_age_limit === 18) ||
+          (session.allow_all_age ||
+            (above45 === true && session.min_age_limit === 45) ||
+            (above45 === false &&
+              session.min_age_limit === 18 &&
+              session.max_age_limit === 44) ||
             isNullOrDefined(above45))
       );
       if (sessions.length) {
